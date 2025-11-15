@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Sample Game</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>Codex Sample Game</h1>
+        <p>
+          キーボードの矢印キーでプレイヤーを操作して、光るコアを集めてください。<br />
+          ゲームを GitHub Pages で公開するための最小構成です。
+        </p>
+        <button id="start-button" class="button">ゲームスタート</button>
+      </section>
+
+      <section class="game-panel">
+        <header class="hud">
+          <div>Score: <span id="score">0</span></div>
+          <div>High Score: <span id="high-score">0</span></div>
+        </header>
+        <canvas id="game-canvas" width="480" height="480" aria-label="sample game canvas"></canvas>
+      </section>
+
+      <section class="instructions">
+        <h2>遊び方</h2>
+        <ul>
+          <li>START ボタンを押すとプレイヤー（青い正方形）が中央に出現します。</li>
+          <li>矢印キーでプレイヤーを操作し、コア（オレンジの丸）に触れるとスコアが増加します。</li>
+          <li>制限時間は 60 秒。時間内にできるだけ多く集めましょう。</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="game.js" type="module"></script>
+  </body>
+</html>

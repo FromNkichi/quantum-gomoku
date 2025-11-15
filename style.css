@@ -1,0 +1,86 @@
+:root {
+  font-family: "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #f7f7ff;
+  background-color: #0d1117;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle, rgba(13, 17, 23, 1) 0%, rgba(5, 8, 15, 1) 100%);
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.hero h1 {
+  margin-bottom: 0.5rem;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.hero p {
+  line-height: 1.6;
+}
+
+.button {
+  padding: 0.8rem 1.6rem;
+  background: #f97316;
+  color: #05080f;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.4);
+}
+
+.game-panel {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+#game-canvas {
+  width: 100%;
+  max-width: 480px;
+  display: block;
+  border-radius: 0.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: #030712;
+}
+
+.instructions ul {
+  padding-left: 1.2rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .page {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero {
+    grid-column: span 2;
+  }
+
+  .instructions {
+    grid-column: span 2;
+  }
+}
