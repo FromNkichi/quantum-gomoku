@@ -1,36 +1,43 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnPickup, movePlayer, isColliding } from "./engine.js";
+import { createSolvedBoard, moveTile, shuffleBoard, isSolved } from "./engine.js";
 
-const CANVAS = { width: 480, height: 480 };
+const SIZE = 4;
 
-test("spawnPickup keeps items within margins", () => {
-  for (let i = 0; i < 100; i += 1) {
-    const pickup = spawnPickup(CANVAS.width, CANVAS.height, 24);
-    assert.ok(pickup.x >= 24 && pickup.x <= CANVAS.width - 24);
-    assert.ok(pickup.y >= 24 && pickup.y <= CANVAS.height - 24);
-    assert.equal(pickup.radius, 14);
-  }
+function countZero(board) {
+  return board.reduce((total, value) => (value === 0 ? total + 1 : total), 0);
+}
+
+test("createSolvedBoard builds a canonical puzzle", () => {
+  const board = createSolvedBoard(SIZE);
+  assert.equal(board.length, SIZE * SIZE);
+  assert.equal(board[0], 1);
+  assert.equal(board[SIZE * SIZE - 2], SIZE * SIZE - 1);
+  assert.equal(board.at(-1), 0);
+  assert.equal(countZero(board), 1);
 });
 
-test("movePlayer applies velocity and clamps to bounds", () => {
-  const player = { x: 5, y: 5, size: 32 };
-  const pressedKeys = new Set(["ArrowUp", "ArrowLeft"]);
-  const moved = movePlayer(player, pressedKeys, 10, CANVAS);
-  assert.equal(moved.x, 0);
-  assert.equal(moved.y, 0);
-
-  const pressedToEdge = new Set(["ArrowDown", "ArrowRight"]);
-  const movedToEdge = movePlayer(moved, pressedToEdge, 1000, CANVAS);
-  assert.equal(movedToEdge.x, CANVAS.width - player.size);
-  assert.equal(movedToEdge.y, CANVAS.height - player.size);
+test("moveTile swaps adjacent tiles but leaves other tiles untouched", () => {
+  const board = createSolvedBoard(SIZE);
+  const moved = moveTile(board, SIZE * SIZE - 2, SIZE); // swap last number with empty
+  assert.equal(moved.at(-1), SIZE * SIZE - 1);
+  assert.equal(moved.at(-2), 0);
+  const untouched = moveTile(board, 0, SIZE);
+  assert.deepEqual(untouched, board);
 });
 
-test("isColliding detects overlap between player and pickup", () => {
-  const player = { x: 100, y: 100, size: 20 };
-  const pickup = { x: 105, y: 105, radius: 10 };
-  assert.ok(isColliding(player, pickup));
+test("shuffleBoard keeps the puzzle valid and produces different arrangements", () => {
+  const solved = createSolvedBoard(SIZE);
+  const shuffled = shuffleBoard(solved, { size: SIZE, shuffleMoves: 40 });
+  assert.equal(shuffled.length, solved.length);
+  assert.equal(countZero(shuffled), 1);
+  assert.notDeepEqual(shuffled, solved);
+  assert.deepEqual([...shuffled].sort((a, b) => a - b), [...solved].sort((a, b) => a - b));
+});
 
-  const farPickup = { x: 400, y: 400, radius: 10 };
-  assert.ok(!isColliding(player, farPickup));
+test("isSolved detects the win condition", () => {
+  const board = createSolvedBoard(SIZE);
+  assert.ok(isSolved(board));
+  const shuffled = shuffleBoard(board, { size: SIZE, shuffleMoves: 5 });
+  assert.ok(!isSolved(shuffled));
 });

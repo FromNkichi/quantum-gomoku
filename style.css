@@ -12,6 +12,10 @@ body {
   touch-action: manipulation;
 }
 
+main {
+  width: 100%;
+}
+
 .page {
   max-width: 960px;
   margin: 0 auto;
@@ -53,25 +57,74 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1.25rem;
 }
 
 .hud {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  font-weight: 600;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-#game-canvas {
-  width: 100%;
-  max-width: 480px;
+.hud-item {
+  background: rgba(15, 23, 42, 0.7);
+  padding: 0.8rem 1rem;
+  border-radius: 0.75rem;
+  text-align: center;
+}
+
+.hud-label {
   display: block;
-  border-radius: 0.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  background: #030712;
-  touch-action: none;
-  user-select: none;
-  cursor: crosshair;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(247, 247, 255, 0.8);
+}
+
+.message {
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+  color: rgba(247, 247, 255, 0.9);
+}
+
+.puzzle-board {
+  width: min(420px, 100%);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.tile {
+  aspect-ratio: 1 / 1;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: clamp(1.2rem, 4vw, 2.4rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  color: #020617;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+.tile:active {
+  transform: scale(0.96);
+}
+
+.tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.tile--empty {
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px dashed rgba(148, 163, 184, 0.4);
+  cursor: default;
+  box-shadow: none;
 }
 
 .instructions ul {

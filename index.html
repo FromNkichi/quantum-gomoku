@@ -3,35 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Codex Sample Game</title>
+    <title>Codex Slide Puzzle</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="page">
       <section class="hero">
-        <h1>Codex Sample Game</h1>
+        <h1>Codex Slide Puzzle</h1>
         <p>
-          画面をタップ＆ドラッグしてプレイヤーを直感的にスライドさせ、光るコアを集めてください。<br />
-          キーボードの場合は矢印キーでも操作できます。
+          15 パズルをモダンな UI で遊べるブラウザゲームです。<br />
+          空白マスの隣にあるピースをスライドさせ、1〜15 が順番に並ぶように揃えてください。
         </p>
         <button id="start-button" class="button">ゲームスタート</button>
       </section>
 
       <section class="game-panel">
-        <header class="hud">
-          <div>Score: <span id="score">0</span></div>
-          <div>High Score: <span id="high-score">0</span></div>
+        <header class="hud" aria-live="polite">
+          <div class="hud-item">
+            <span class="hud-label">Moves</span>
+            <strong id="moves">0</strong>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Time</span>
+            <strong id="timer">00:00</strong>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Best</span>
+            <strong id="best">―</strong>
+          </div>
         </header>
-        <canvas id="game-canvas" width="480" height="480" aria-label="sample game canvas"></canvas>
+        <p id="message" class="message">START ボタンで 15 パズルに挑戦！</p>
+        <div
+          id="puzzle-board"
+          class="puzzle-board"
+          role="grid"
+          aria-label="15 パズルの盤面"
+        ></div>
       </section>
 
       <section class="instructions">
         <h2>遊び方</h2>
         <ul>
-          <li>START ボタンを押すとプレイヤー（青い正方形）が中央に出現します。</li>
-          <li>指でキャンバスをなぞると、その軌跡に合わせてプレイヤーが滑らかに移動します。</li>
-          <li>コア（オレンジの丸）に触れるたびにスコアが 10 加算されます。</li>
-          <li>制限時間は 60 秒。時間内にできるだけ多く集めましょう。</li>
+          <li>START ボタンで盤面がシャッフルされ、タイマーがスタートします。</li>
+          <li>空白マスの隣にあるピースをタップ／クリックすると、そのピースが空白と入れ替わります。</li>
+          <li>数字が 1 〜 15 の順番に並べばクリア。最小手数を目指しましょう。</li>
+          <li>ベスト手数はブラウザに保存され、いつでも更新できます。</li>
         </ul>
       </section>
     </main>

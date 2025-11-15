@@ -1,231 +1,131 @@
-import { spawnPickup, movePlayer, isColliding, clamp } from "./engine.js";
+import { createSolvedBoard, shuffleBoard, moveTile, isSolved } from "./engine.js";
 
-const canvas = document.getElementById("game-canvas");
-const ctx = canvas.getContext("2d");
+const GRID_SIZE = 4;
+const boardElement = document.getElementById("puzzle-board");
 const startButton = document.getElementById("start-button");
-const scoreLabel = document.getElementById("score");
-const highScoreLabel = document.getElementById("high-score");
+const movesLabel = document.getElementById("moves");
+const timerLabel = document.getElementById("timer");
+const bestLabel = document.getElementById("best");
+const messageElement = document.getElementById("message");
+
+const STORAGE_KEY = "codex-puzzle-best";
 
 const state = {
+  board: createSolvedBoard(GRID_SIZE),
   running: false,
-  score: 0,
-  highScore: Number(localStorage.getItem("codex-high-score")) || 0,
-  timer: 0,
-  timeLimit: 60,
-  player: { x: 220, y: 220, size: 32, speed: 4 },
-  pickup: spawnPickup(canvas.width, canvas.height),
-  pressedKeys: new Set(),
+  moves: 0,
+  elapsed: 0,
+  timerId: null,
+  best: Number(localStorage.getItem(STORAGE_KEY)) || null,
 };
 
-let lastTimestamp = 0;
-let animationId = 0;
-const touchInput = {
-  active: false,
-  pointerId: null,
-  x: null,
-  y: null,
-  ripple: null,
-};
-
-function resetGame() {
-  state.score = 0;
-  state.timer = 0;
-  state.player.x = canvas.width / 2 - state.player.size / 2;
-  state.player.y = canvas.height / 2 - state.player.size / 2;
-  state.pickup = spawnPickup(canvas.width, canvas.height);
-  scoreLabel.textContent = state.score;
-  resetTouchControl();
-  state.running = true;
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function update(delta) {
-  if (!state.running) return;
-  state.timer += delta;
-  updateTouchRipple(delta);
+function boardsAreEqual(a, b) {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
 
-  if (state.timer >= state.timeLimit) {
-    state.running = false;
-    cancelAnimationFrame(animationId);
-    if (state.score > state.highScore) {
-      state.highScore = state.score;
-      localStorage.setItem("codex-high-score", state.highScore);
-      highScoreLabel.textContent = state.highScore;
-    }
-    startButton.textContent = "もう一度";
+function renderBoard() {
+  boardElement.innerHTML = "";
+  state.board.forEach((value, index) => {
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = value === 0 ? "tile tile--empty" : "tile";
+    tile.dataset.index = String(index);
+    tile.textContent = value === 0 ? "" : String(value);
+    tile.setAttribute("aria-label", value === 0 ? "空白" : `${value} のピース`);
+    tile.setAttribute("role", "gridcell");
+    tile.disabled = value === 0 || !state.running;
+    tile.setAttribute("aria-disabled", tile.disabled ? "true" : "false");
+    boardElement.appendChild(tile);
+  });
+}
+
+function updateHud() {
+  movesLabel.textContent = String(state.moves);
+  timerLabel.textContent = formatTime(state.elapsed);
+  bestLabel.textContent = state.best === null ? "―" : String(state.best);
+}
+
+function startTimer() {
+  stopTimer();
+  state.timerId = setInterval(() => {
+    state.elapsed += 1;
+    timerLabel.textContent = formatTime(state.elapsed);
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timerId) {
+    clearInterval(state.timerId);
+    state.timerId = null;
+  }
+}
+
+function createPuzzle() {
+  let puzzle = shuffleBoard(createSolvedBoard(GRID_SIZE));
+  while (isSolved(puzzle)) {
+    puzzle = shuffleBoard(createSolvedBoard(GRID_SIZE));
+  }
+  return puzzle;
+}
+
+function startGame() {
+  state.board = createPuzzle();
+  state.running = true;
+  state.moves = 0;
+  state.elapsed = 0;
+  messageElement.textContent = "空白マスの隣のピースをタップして順番に並べましょう。";
+  startButton.textContent = "リセット";
+  renderBoard();
+  updateHud();
+  startTimer();
+}
+
+function finishGame() {
+  state.running = false;
+  stopTimer();
+  messageElement.textContent = `クリア！${state.moves} 手で ${formatTime(
+    state.elapsed
+  )} でした。`;
+  if (state.best === null || state.moves < state.best) {
+    state.best = state.moves;
+    localStorage.setItem(STORAGE_KEY, String(state.best));
+  }
+  renderBoard();
+  updateHud();
+  startButton.textContent = "もう一度挑戦";
+}
+
+function handleTileClick(event) {
+  if (!state.running) return;
+  const target = event.target.closest(".tile");
+  if (!target || target.classList.contains("tile--empty")) return;
+  const index = Number(target.dataset.index);
+  const nextBoard = moveTile(state.board, index, GRID_SIZE);
+  if (boardsAreEqual(nextBoard, state.board)) {
     return;
   }
-
-  if (touchInput.active && touchInput.x !== null && touchInput.y !== null) {
-    setPlayerToTouch(touchInput.x, touchInput.y);
-  } else {
-    const moved = movePlayer(
-      state.player,
-      state.pressedKeys,
-      state.player.speed,
-      { width: canvas.width, height: canvas.height }
-    );
-    state.player.x = moved.x;
-    state.player.y = moved.y;
+  state.board = nextBoard;
+  state.moves += 1;
+  renderBoard();
+  updateHud();
+  if (isSolved(state.board)) {
+    finishGame();
   }
-
-  if (isColliding(state.player, state.pickup)) {
-    state.score += 10;
-    scoreLabel.textContent = state.score;
-    state.pickup = spawnPickup(canvas.width, canvas.height);
-  }
-}
-
-function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#38bdf8";
-  ctx.fillRect(state.player.x, state.player.y, state.player.size, state.player.size);
-
-  ctx.beginPath();
-  ctx.arc(state.pickup.x, state.pickup.y, state.pickup.radius, 0, Math.PI * 2);
-  ctx.fillStyle = "#f97316";
-  ctx.shadowColor = "#fb923c";
-  ctx.shadowBlur = 20;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  drawTimer();
-  renderTouchFeedback();
-}
-
-function drawTimer() {
-  const progress = Math.min(state.timer / state.timeLimit, 1);
-  ctx.fillStyle = "#1f2937";
-  ctx.fillRect(0, canvas.height - 12, canvas.width, 12);
-  ctx.fillStyle = "#22c55e";
-  ctx.fillRect(0, canvas.height - 12, canvas.width * (1 - progress), 12);
-}
-
-function renderTouchFeedback() {
-  if (!touchInput.ripple) return;
-  const { x, y, progress } = touchInput.ripple;
-  const radius = 12 + progress * 40;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = `rgba(56, 189, 248, ${Math.max(0, 1 - progress)})`;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
-function updateTouchRipple(delta) {
-  if (!touchInput.ripple) return;
-  touchInput.ripple.progress += delta * 3;
-  if (touchInput.ripple.progress >= 1) {
-    touchInput.ripple = null;
-  }
-}
-
-function setPlayerToTouch(targetX, targetY) {
-  const half = state.player.size / 2;
-  state.player.x = clamp(targetX - half, 0, canvas.width - state.player.size);
-  state.player.y = clamp(targetY - half, 0, canvas.height - state.player.size);
-}
-
-function getCanvasPoint(event) {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  return {
-    x: (event.clientX - rect.left) * scaleX,
-    y: (event.clientY - rect.top) * scaleY,
-  };
-}
-
-function startTouchControl(event) {
-  event.preventDefault();
-  if (!state.running) {
-    startButton.click();
-  }
-  const point = getCanvasPoint(event);
-  touchInput.active = true;
-  touchInput.pointerId = event.pointerId;
-  touchInput.x = point.x;
-  touchInput.y = point.y;
-  touchInput.ripple = { x: point.x, y: point.y, progress: 0 };
-  setPlayerToTouch(point.x, point.y);
-  if (canvas.setPointerCapture) {
-    canvas.setPointerCapture(event.pointerId);
-  }
-}
-
-function moveTouchControl(event) {
-  if (!touchInput.active || touchInput.pointerId !== event.pointerId) return;
-  event.preventDefault();
-  const point = getCanvasPoint(event);
-  touchInput.x = point.x;
-  touchInput.y = point.y;
-  setPlayerToTouch(point.x, point.y);
-}
-
-function endTouchControl(event) {
-  if (touchInput.pointerId !== event.pointerId) return;
-  event.preventDefault();
-  if (
-    canvas.releasePointerCapture &&
-    canvas.hasPointerCapture &&
-    canvas.hasPointerCapture(event.pointerId)
-  ) {
-    canvas.releasePointerCapture(event.pointerId);
-  }
-  resetTouchControl();
-}
-
-function resetTouchControl() {
-  touchInput.active = false;
-  touchInput.pointerId = null;
-  touchInput.x = null;
-  touchInput.y = null;
-}
-
-function loop(timestamp) {
-  const delta = (timestamp - lastTimestamp) / 1000;
-  lastTimestamp = timestamp;
-
-  update(delta);
-  render();
-
-  animationId = requestAnimationFrame(loop);
 }
 
 function init() {
-  highScoreLabel.textContent = state.highScore;
-  render();
+  renderBoard();
+  updateHud();
+  messageElement.textContent = "START ボタンで 15 パズルに挑戦！";
 }
 
-startButton.addEventListener("click", () => {
-  resetGame();
-  startButton.textContent = "プレイ中...";
-  lastTimestamp = performance.now();
-  cancelAnimationFrame(animationId);
-  animationId = requestAnimationFrame(loop);
-});
-
-canvas.addEventListener("pointerdown", startTouchControl);
-canvas.addEventListener("pointermove", moveTouchControl);
-canvas.addEventListener("pointerup", endTouchControl);
-canvas.addEventListener("pointerleave", endTouchControl);
-canvas.addEventListener("pointercancel", endTouchControl);
-window.addEventListener("blur", () => {
-  state.pressedKeys.clear();
-  resetTouchControl();
-});
-
-window.addEventListener("keydown", (event) => {
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-    event.preventDefault();
-    state.pressedKeys.add(event.key);
-  }
-});
-
-window.addEventListener("keyup", (event) => {
-  state.pressedKeys.delete(event.key);
-});
+startButton.addEventListener("click", startGame);
+boardElement.addEventListener("click", handleTileClick);
 
 init();
