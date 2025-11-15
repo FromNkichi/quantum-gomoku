@@ -1,4 +1,4 @@
-import { spawnPickup, movePlayer, isColliding } from "./engine.js";
+import { spawnPickup, movePlayer, isColliding, clamp } from "./engine.js";
 
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
@@ -19,6 +19,13 @@ const state = {
 
 let lastTimestamp = 0;
 let animationId = 0;
+const touchInput = {
+  active: false,
+  pointerId: null,
+  x: null,
+  y: null,
+  ripple: null,
+};
 
 function resetGame() {
   state.score = 0;
@@ -27,12 +34,14 @@ function resetGame() {
   state.player.y = canvas.height / 2 - state.player.size / 2;
   state.pickup = spawnPickup(canvas.width, canvas.height);
   scoreLabel.textContent = state.score;
+  resetTouchControl();
   state.running = true;
 }
 
 function update(delta) {
   if (!state.running) return;
   state.timer += delta;
+  updateTouchRipple(delta);
 
   if (state.timer >= state.timeLimit) {
     state.running = false;
@@ -46,14 +55,18 @@ function update(delta) {
     return;
   }
 
-  const moved = movePlayer(
-    state.player,
-    state.pressedKeys,
-    state.player.speed,
-    { width: canvas.width, height: canvas.height }
-  );
-  state.player.x = moved.x;
-  state.player.y = moved.y;
+  if (touchInput.active && touchInput.x !== null && touchInput.y !== null) {
+    setPlayerToTouch(touchInput.x, touchInput.y);
+  } else {
+    const moved = movePlayer(
+      state.player,
+      state.pressedKeys,
+      state.player.speed,
+      { width: canvas.width, height: canvas.height }
+    );
+    state.player.x = moved.x;
+    state.player.y = moved.y;
+  }
 
   if (isColliding(state.player, state.pickup)) {
     state.score += 10;
@@ -79,6 +92,7 @@ function render() {
   ctx.shadowBlur = 0;
 
   drawTimer();
+  renderTouchFeedback();
 }
 
 function drawTimer() {
@@ -87,6 +101,87 @@ function drawTimer() {
   ctx.fillRect(0, canvas.height - 12, canvas.width, 12);
   ctx.fillStyle = "#22c55e";
   ctx.fillRect(0, canvas.height - 12, canvas.width * (1 - progress), 12);
+}
+
+function renderTouchFeedback() {
+  if (!touchInput.ripple) return;
+  const { x, y, progress } = touchInput.ripple;
+  const radius = 12 + progress * 40;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(56, 189, 248, ${Math.max(0, 1 - progress)})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function updateTouchRipple(delta) {
+  if (!touchInput.ripple) return;
+  touchInput.ripple.progress += delta * 3;
+  if (touchInput.ripple.progress >= 1) {
+    touchInput.ripple = null;
+  }
+}
+
+function setPlayerToTouch(targetX, targetY) {
+  const half = state.player.size / 2;
+  state.player.x = clamp(targetX - half, 0, canvas.width - state.player.size);
+  state.player.y = clamp(targetY - half, 0, canvas.height - state.player.size);
+}
+
+function getCanvasPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function startTouchControl(event) {
+  event.preventDefault();
+  if (!state.running) {
+    startButton.click();
+  }
+  const point = getCanvasPoint(event);
+  touchInput.active = true;
+  touchInput.pointerId = event.pointerId;
+  touchInput.x = point.x;
+  touchInput.y = point.y;
+  touchInput.ripple = { x: point.x, y: point.y, progress: 0 };
+  setPlayerToTouch(point.x, point.y);
+  if (canvas.setPointerCapture) {
+    canvas.setPointerCapture(event.pointerId);
+  }
+}
+
+function moveTouchControl(event) {
+  if (!touchInput.active || touchInput.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  const point = getCanvasPoint(event);
+  touchInput.x = point.x;
+  touchInput.y = point.y;
+  setPlayerToTouch(point.x, point.y);
+}
+
+function endTouchControl(event) {
+  if (touchInput.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  if (
+    canvas.releasePointerCapture &&
+    canvas.hasPointerCapture &&
+    canvas.hasPointerCapture(event.pointerId)
+  ) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+  resetTouchControl();
+}
+
+function resetTouchControl() {
+  touchInput.active = false;
+  touchInput.pointerId = null;
+  touchInput.x = null;
+  touchInput.y = null;
 }
 
 function loop(timestamp) {
@@ -110,6 +205,16 @@ startButton.addEventListener("click", () => {
   lastTimestamp = performance.now();
   cancelAnimationFrame(animationId);
   animationId = requestAnimationFrame(loop);
+});
+
+canvas.addEventListener("pointerdown", startTouchControl);
+canvas.addEventListener("pointermove", moveTouchControl);
+canvas.addEventListener("pointerup", endTouchControl);
+canvas.addEventListener("pointerleave", endTouchControl);
+canvas.addEventListener("pointercancel", endTouchControl);
+window.addEventListener("blur", () => {
+  state.pressedKeys.clear();
+  resetTouchControl();
 });
 
 window.addEventListener("keydown", (event) => {
