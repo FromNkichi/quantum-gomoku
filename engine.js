@@ -1,37 +1,81 @@
-export function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
+export const DEFAULT_BOARD_SIZE = 11;
 
-export function spawnPickup(width, height, margin = 24) {
-  if (width <= margin * 2 || height <= margin * 2) {
-    throw new Error("Canvas is too small for the requested margin");
+export function createEmptyBoard(size = DEFAULT_BOARD_SIZE) {
+  if (!Number.isInteger(size) || size < 5) {
+    throw new Error("Board size must be an integer of at least 5");
   }
-  return {
-    x: Math.random() * (width - margin * 2) + margin,
-    y: Math.random() * (height - margin * 2) + margin,
-    radius: 14,
-  };
+  return Array.from({ length: size * size }, () => null);
 }
 
-export function movePlayer(player, pressedKeys, speed, bounds) {
-  const next = { ...player };
-  if (pressedKeys.has("ArrowUp")) next.y -= speed;
-  if (pressedKeys.has("ArrowDown")) next.y += speed;
-  if (pressedKeys.has("ArrowLeft")) next.x -= speed;
-  if (pressedKeys.has("ArrowRight")) next.x += speed;
-
-  const maxX = bounds.width - player.size;
-  const maxY = bounds.height - player.size;
-  next.x = clamp(next.x, 0, maxX);
-  next.y = clamp(next.y, 0, maxY);
+export function placeStone(board, index, player, probability) {
+  if (!board || !Array.isArray(board)) {
+    throw new Error("Board must be an array");
+  }
+  if (index < 0 || index >= board.length) {
+    throw new Error("Index out of bounds");
+  }
+  if (board[index]) {
+    throw new Error("Cell is already occupied");
+  }
+  if (probability < 0 || probability > 1) {
+    throw new Error("Probability must be between 0 and 1");
+  }
+  const next = board.slice();
+  next[index] = { player, probability };
   return next;
 }
 
-export function isColliding(player, pickup) {
-  const playerCenterX = player.x + player.size / 2;
-  const playerCenterY = player.y + player.size / 2;
-  const dx = playerCenterX - pickup.x;
-  const dy = playerCenterY - pickup.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  return distance < player.size / 2 + pickup.radius;
+export function hasFiveInRow(cells, size, color) {
+  const directions = [
+    { dx: 1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 1, dy: 1 },
+    { dx: -1, dy: 1 },
+  ];
+
+  const getCell = (x, y) => {
+    if (x < 0 || y < 0 || x >= size || y >= size) return null;
+    return cells[y * size + x];
+  };
+
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      if (getCell(x, y) !== color) continue;
+      for (const { dx, dy } of directions) {
+        let count = 1;
+        for (let step = 1; step < 5; step += 1) {
+          if (getCell(x + dx * step, y + dy * step) === color) {
+            count += 1;
+          } else {
+            break;
+          }
+        }
+        if (count >= 5) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+export function determineWinner(cells, size) {
+  const blackWin = hasFiveInRow(cells, size, "black");
+  const whiteWin = hasFiveInRow(cells, size, "white");
+  if (blackWin && whiteWin) return "both";
+  if (blackWin) return "black";
+  if (whiteWin) return "white";
+  return null;
+}
+
+export function collapseBoard(board, size, rng = Math.random) {
+  const collapsed = board.map((cell) => {
+    if (!cell) return null;
+    const chance = Math.min(Math.max(cell.probability, 0), 1);
+    const roll = rng();
+    const resolved = roll < chance ? "black" : "white";
+    return resolved;
+  });
+  const winner = determineWinner(collapsed, size);
+  return { collapsed, winner };
 }

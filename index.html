@@ -3,35 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Core Collector Game</title>
+    <title>量子五目ならべ</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="page">
       <section class="hero">
-        <h1>Core Collector Game</h1>
+        <h1>量子五目ならべ</h1>
         <p>
-          画面をタップ＆ドラッグしてプレイヤーを直感的にスライドさせ、光るコアを集めてください。<br />
-          キーボードの場合は矢印キーでも操作できます。
+          90% / 70% / 30% / 10% の確率で黒になる量子石を使った新感覚の五目ならべです。<br />
+          交互に石を置き、手番の終わりに「観測」して勝利を狙いましょう。
         </p>
-        <button id="start-button" class="button">ゲームスタート</button>
       </section>
 
       <section class="game-panel">
-        <header class="hud">
-          <div>Score: <span id="score">0</span></div>
-          <div>High Score: <span id="high-score">0</span></div>
-        </header>
-        <canvas id="game-canvas" width="480" height="480" aria-label="sample game canvas"></canvas>
+        <div class="board-wrapper">
+          <div id="board" class="board" aria-label="量子五目ならべの盤面"></div>
+        </div>
+        <div class="sidebar">
+          <div class="status-block">
+            <p id="status" class="status"></p>
+            <p id="stone-info" class="stone-info"></p>
+            <p id="decision-info" class="decision-info"></p>
+          </div>
+          <div class="controls">
+            <button id="observe-button" class="button">観測する</button>
+            <button id="skip-button" class="button subtle">観測しない</button>
+            <button id="reset-button" class="button ghost">リセット</button>
+          </div>
+          <div class="log-panel">
+            <h2>ログ</h2>
+            <ol id="log"></ol>
+          </div>
+        </div>
       </section>
 
       <section class="instructions">
-        <h2>遊び方</h2>
+        <h2>ルール</h2>
         <ul>
-          <li>START ボタンを押すとプレイヤー（青い正方形）が中央に出現します。</li>
-          <li>指でキャンバスをなぞると、その軌跡に合わせてプレイヤーが滑らかに移動します。</li>
-          <li>コア（オレンジの丸）に触れるたびにスコアが 10 加算されます。</li>
-          <li>制限時間は 60 秒。時間内にできるだけ多く集めましょう。</li>
+          <li>黒は 90% → 70%、白は 10% → 30% の石を交互に使用します。</li>
+          <li>石を置いた直後、観測するかどうかを選べます。</li>
+          <li>観測すると全ての石が確率に従って黒か白に確定します。</li>
+          <li>観測の瞬間に五目が揃っていたプレイヤーが勝利です。</li>
+          <li>観測しても五目が揃わなかった場合は盤面が元に戻り、ゲームを続行します。</li>
+          <li>同時に両者が五目を作った場合は引き分けです。</li>
         </ul>
       </section>
     </main>
