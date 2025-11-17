@@ -180,6 +180,12 @@ function renderBoard() {
     button.type = "button";
     button.className = "cell";
     button.dataset.index = index;
+    const x = index % BOARD_SIZE;
+    const y = Math.floor(index / BOARD_SIZE);
+    if (y === 0) button.classList.add("cell-top-edge");
+    if (y === BOARD_SIZE - 1) button.classList.add("cell-bottom-edge");
+    if (x === 0) button.classList.add("cell-left-edge");
+    if (x === BOARD_SIZE - 1) button.classList.add("cell-right-edge");
     if (!cell) {
       button.setAttribute("aria-label", "空の交点");
     } else if (typeof cell === "string") {
@@ -195,7 +201,7 @@ function renderBoard() {
       const percentage = Math.round(probability * 100);
       const tone = blendStoneColor(probability);
       stone.classList.add("probability-stone");
-      stone.textContent = `${percentage}%`;
+      stone.textContent = `${percentage}`;
       stone.style.setProperty("--stone-fill", tone.fill);
       stone.style.setProperty("--stone-text-color", tone.text);
       button.setAttribute(
