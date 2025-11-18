@@ -28,16 +28,45 @@ main.page {
   line-height: 1.7;
 }
 
-.game-panel {
+.game-layout {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 1.5rem;
+  gap: clamp(1rem, 3vw, 1.75rem);
+}
+
+.player-panel {
+  background: rgba(255, 255, 255, 0.9);
+  padding: clamp(0.85rem, 2.5vw, 1.6rem);
   border-radius: 1.25rem;
   border: 1px solid rgba(136, 94, 36, 0.2);
-  box-shadow: 0 18px 45px rgba(103, 73, 37, 0.25);
-  min-height: 0;
+  box-shadow: 0 12px 30px rgba(57, 40, 18, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.player-panel.self-panel {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.player-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.player-role {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.player-note {
+  font-size: 0.85rem;
+  margin: 0;
+  color: rgba(43, 30, 15, 0.75);
+  letter-spacing: 0.05em;
 }
 
 .board-wrapper {
@@ -51,6 +80,7 @@ main.page {
   position: relative;
   box-shadow: inset 0 6px 20px rgba(51, 35, 15, 0.25);
   min-height: 0;
+  min-height: clamp(320px, 45vh, 520px);
 }
 
 .board {
@@ -58,6 +88,7 @@ main.page {
   --grid-line-color: rgba(71, 45, 16, 0.8);
   --board-size: 11;
   --grid-step: calc((100% - (var(--board-padding) * 2)) / (var(--board-size) - 1));
+  --stone-size: min(calc(var(--grid-step) * 0.7), 52px);
   display: block;
   width: 100%;
   max-width: 640px;
@@ -71,6 +102,10 @@ main.page {
   padding: var(--board-padding);
   overflow: hidden;
   touch-action: manipulation;
+}
+
+.player-panel .status-block {
+  width: 100%;
 }
 
 .board::before {
@@ -121,8 +156,8 @@ main.page {
   position: absolute;
   top: calc(var(--board-padding) + (var(--grid-step) * var(--cell-y)));
   left: calc(var(--board-padding) + (var(--grid-step) * var(--cell-x)));
-  width: min(calc(var(--grid-step) * 0.92), 48px);
-  height: min(calc(var(--grid-step) * 0.92), 48px);
+  width: min(var(--grid-step), 56px);
+  height: min(var(--grid-step), 56px);
   transform: translate(-50%, -50%);
   padding: 0;
   z-index: 1;
@@ -158,7 +193,7 @@ main.page {
 }
 
 .cell:hover:not(:disabled) .stone.probability-stone {
-  transform: translateY(-1px) scale(1.02);
+  transform: translate(-50%, -50%) translateY(-2px) scale(1.02);
   box-shadow: 0 10px 15px rgba(18, 13, 5, 0.35);
 }
 
@@ -167,8 +202,8 @@ main.page {
 }
 
 .stone {
-  width: 68%;
-  height: 68%;
+  width: var(--stone-size);
+  height: var(--stone-size);
   border-radius: 50%;
   border: 1px solid rgba(24, 17, 8, 0.35);
   box-shadow: inset 0 4px 10px rgba(255, 255, 255, 0.35), inset 0 -8px 12px rgba(0, 0, 0, 0.35),
@@ -176,10 +211,15 @@ main.page {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-weight: 700;
   font-size: clamp(0.7rem, 1.8vw, 1rem);
   letter-spacing: 0.03em;
   transition: transform 150ms ease, box-shadow 150ms ease;
+  pointer-events: none;
 }
 
 .stone.probability-stone {
@@ -198,12 +238,6 @@ main.page {
   color: transparent;
 }
 
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
 .status-block p {
   margin: 0.25rem 0;
 }
@@ -217,6 +251,11 @@ main.page {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  justify-content: flex-start;
+}
+
+.self-panel .controls {
+  justify-content: flex-end;
 }
 
 .button {
@@ -261,6 +300,7 @@ main.page {
   border-radius: 1rem;
   padding: 1rem;
   border: 1px solid rgba(90, 59, 26, 0.2);
+  width: 100%;
 }
 
 .log-panel h2 {
@@ -317,17 +357,6 @@ main.page {
   content: "－";
 }
 
-@media (min-width: 960px) {
-  .game-panel {
-    flex-direction: row;
-  }
-
-  .board-wrapper,
-  .sidebar {
-    flex: 1;
-  }
-}
-
 @media (max-width: 640px) {
   main.page {
     padding: clamp(0.75rem, 4vw, 1.25rem);
@@ -338,38 +367,22 @@ main.page {
     font-size: 0.95rem;
   }
 
-  .game-panel {
-    padding: 1rem;
-    gap: 1rem;
-    min-height: calc(100dvh - 2rem);
-  }
-
-  .board-wrapper {
-    padding: 0.75rem;
-    flex: 1;
-  }
-
-  .board {
-    max-width: 520px;
-    margin: 0 auto;
-  }
-
-  .sidebar {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 1rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(136, 94, 36, 0.2);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-    position: sticky;
-    bottom: 0.5rem;
-    z-index: 2;
-  }
-
   .controls {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .instructions .rules {
     padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .game-layout {
+    gap: 2rem;
+  }
+
+  .board-wrapper {
+    min-height: 560px;
   }
 }

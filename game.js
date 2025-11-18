@@ -13,13 +13,13 @@ const STONE_CYCLES = {
 
 const elements = {
   board: document.getElementById("board"),
-  status: document.getElementById("status"),
-  stoneInfo: document.getElementById("stone-info"),
-  decisionInfo: document.getElementById("decision-info"),
-  observeButton: document.getElementById("observe-button"),
-  skipButton: document.getElementById("skip-button"),
-  resetButton: document.getElementById("reset-button"),
-  backButton: document.getElementById("back-button"),
+  statuses: document.querySelectorAll("[data-status]"),
+  stoneInfos: document.querySelectorAll("[data-stone-info]"),
+  decisionInfos: document.querySelectorAll("[data-decision-info]"),
+  observeButtons: document.querySelectorAll('[data-action="observe"]'),
+  skipButtons: document.querySelectorAll('[data-action="skip"]'),
+  resetButtons: document.querySelectorAll('[data-action="reset"]'),
+  backButtons: document.querySelectorAll('[data-action="back"]'),
   log: document.getElementById("log"),
 };
 
@@ -99,7 +99,9 @@ function addLog(message) {
 
 function handleCellClick(event) {
   if (state.gameOver || state.awaitingDecision || state.viewingObservation) return;
-  const { index } = event.target.dataset;
+  const cell = event.target.closest(".cell");
+  if (!cell || !elements.board.contains(cell)) return;
+  const { index } = cell.dataset;
   if (index === undefined) return;
   const idx = Number(index);
   if (Number.isNaN(idx) || state.board[idx]) return;
@@ -229,33 +231,53 @@ function renderBoard() {
   });
 }
 
+function updateText(nodes, text) {
+  nodes.forEach((node) => {
+    node.textContent = text;
+  });
+}
+
+function toggleButtons(buttons, disabled) {
+  buttons.forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
 function renderStatus() {
   if (state.gameOver) {
     if (state.observerWin) {
-      elements.status.textContent = `${describePlayer(state.winner)}が観測者として勝利しました。黒と白が同時に五目を達成しました。`;
+      updateText(
+        elements.statuses,
+        `${describePlayer(state.winner)}が観測者として勝利しました。黒と白が同時に五目を達成しました。`
+      );
     } else {
-      elements.status.textContent = `${describePlayer(state.winner)}の勝利！もう一度遊ぶにはリセットしてください。`;
+      updateText(
+        elements.statuses,
+        `${describePlayer(state.winner)}の勝利！もう一度遊ぶにはリセットしてください。`
+      );
     }
-    elements.stoneInfo.textContent = "ゲーム終了";
-    elements.decisionInfo.textContent = "";
+    updateText(elements.stoneInfos, "ゲーム終了");
+    updateText(elements.decisionInfos, "");
   } else if (state.viewingObservation) {
-    elements.status.textContent = "観測結果を表示中です。";
-    elements.stoneInfo.textContent = "石は確率に従って黒と白に確定しています。";
-    elements.decisionInfo.textContent = "盤面を確認したら「もどる」で量子盤面に戻ってください。";
+    updateText(elements.statuses, "観測結果を表示中です。");
+    updateText(elements.stoneInfos, "石は確率に従って黒と白に確定しています。");
+    updateText(elements.decisionInfos, "盤面を確認したら「もどる」で量子盤面に戻ってください。");
   } else {
     const player = describePlayer(state.currentPlayer);
     const probability = Math.round(getNextProbability(state.currentPlayer) * 100);
-    elements.status.textContent = `${player}の番です。`;
-    elements.stoneInfo.textContent = `次に置ける石: ${probability}%で黒になります。`;
-    elements.decisionInfo.textContent = state.awaitingDecision
-      ? "観測するか、そのままターンを渡すか選んでください。"
-      : "空いているマスを選んで石を置いてください。";
+    updateText(elements.statuses, `${player}の番です。`);
+    updateText(elements.stoneInfos, `次に置ける石: ${probability}%で黒になります。`);
+    updateText(
+      elements.decisionInfos,
+      state.awaitingDecision
+        ? "観測するか、そのままターンを渡すか選んでください。"
+        : "空いているマスを選んで石を置いてください。"
+    );
   }
-  elements.observeButton.disabled =
-    !state.awaitingDecision || state.gameOver || state.viewingObservation;
-  elements.skipButton.disabled =
-    !state.awaitingDecision || state.gameOver || state.viewingObservation;
-  elements.backButton.disabled = !(state.viewingObservation && !state.gameOver);
+  const observationDisabled = !state.awaitingDecision || state.gameOver || state.viewingObservation;
+  toggleButtons(elements.observeButtons, observationDisabled);
+  toggleButtons(elements.skipButtons, observationDisabled);
+  toggleButtons(elements.backButtons, !(state.viewingObservation && !state.gameOver));
 }
 
 function renderLog() {
@@ -268,9 +290,9 @@ function renderLog() {
 }
 
 elements.board.addEventListener("click", handleCellClick);
-elements.observeButton.addEventListener("click", observeBoard);
-elements.skipButton.addEventListener("click", skipObservation);
-elements.resetButton.addEventListener("click", resetGame);
-elements.backButton.addEventListener("click", revertBoard);
+elements.observeButtons.forEach((button) => button.addEventListener("click", observeBoard));
+elements.skipButtons.forEach((button) => button.addEventListener("click", skipObservation));
+elements.resetButtons.forEach((button) => button.addEventListener("click", resetGame));
+elements.backButtons.forEach((button) => button.addEventListener("click", revertBoard));
 
 defaultState();

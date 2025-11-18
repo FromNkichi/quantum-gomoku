@@ -16,27 +16,50 @@
         </p>
       </section>
 
-      <section class="game-panel">
-        <div class="board-wrapper">
-          <div id="board" class="board" aria-label="量子五目ならべの盤面"></div>
-        </div>
-        <div class="sidebar">
-          <div class="status-block">
-            <p id="status" class="status"></p>
-            <p id="stone-info" class="stone-info"></p>
-            <p id="decision-info" class="decision-info"></p>
+      <section class="game-layout" aria-label="盤面と操作エリア">
+        <section class="player-panel opponent-panel" aria-label="相手プレイヤーの操作UI">
+          <div class="player-label">
+            <p class="player-role">相手プレイヤー</p>
+            <p class="player-note">遠隔側の操作</p>
           </div>
-          <div class="controls">
-            <button id="observe-button" class="button">観測する</button>
-            <button id="skip-button" class="button subtle">観測しない</button>
-            <button id="back-button" class="button neutral">もどる</button>
-            <button id="reset-button" class="button ghost">リセット</button>
+          <div class="status-block">
+            <p class="status" data-status></p>
+            <p class="stone-info" data-stone-info></p>
+            <p class="decision-info" data-decision-info></p>
+          </div>
+          <div class="controls" data-player-controls>
+            <button class="button" data-action="observe">観測する</button>
+            <button class="button subtle" data-action="skip">観測しない</button>
+            <button class="button neutral" data-action="back">もどる</button>
+            <button class="button ghost" data-action="reset">リセット</button>
           </div>
           <div class="log-panel">
             <h2>ログ</h2>
             <ol id="log"></ol>
           </div>
+        </section>
+
+        <div class="board-wrapper" aria-label="碁盤">
+          <div id="board" class="board" aria-label="量子五目ならべの盤面"></div>
         </div>
+
+        <section class="player-panel self-panel" aria-label="自分プレイヤーの操作UI">
+          <div class="player-label">
+            <p class="player-role">自分プレイヤー</p>
+            <p class="player-note">手元側の操作</p>
+          </div>
+          <div class="status-block">
+            <p class="status" data-status></p>
+            <p class="stone-info" data-stone-info></p>
+            <p class="decision-info" data-decision-info></p>
+          </div>
+          <div class="controls" data-player-controls>
+            <button class="button" data-action="observe">観測する</button>
+            <button class="button subtle" data-action="skip">観測しない</button>
+            <button class="button neutral" data-action="back">もどる</button>
+            <button class="button ghost" data-action="reset">リセット</button>
+          </div>
+        </section>
       </section>
 
       <section class="instructions">
