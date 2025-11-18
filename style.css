@@ -344,8 +344,8 @@ main.page.game-page {
   }
 
   .player-panel {
-    height: var(--mobile-panel-height, auto);
-    overflow: auto;
+    min-height: var(--mobile-panel-height, auto);
+    overflow: visible;
     gap: 0.6rem;
   }
 
