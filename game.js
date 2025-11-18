@@ -22,7 +22,6 @@ const elements = {
   skipButtons: document.querySelectorAll('[data-action="skip"]'),
   resetButtons: document.querySelectorAll('[data-action="reset"]'),
   backButtons: document.querySelectorAll('[data-action="back"]'),
-  log: document.getElementById("log"),
 };
 
 const boardCtx = elements.boardCanvas?.getContext("2d");
@@ -42,7 +41,6 @@ const state = {
   gameOver: false,
   winner: null,
   observerWin: false,
-  log: [],
   previousQuantumBoard: null,
   viewingObservation: false,
   pendingTurnSwitch: false,
@@ -57,7 +55,6 @@ function defaultState() {
   state.gameOver = false;
   state.winner = null;
   state.observerWin = false;
-  state.log = [];
   state.previousQuantumBoard = null;
   state.viewingObservation = false;
   state.pendingTurnSwitch = false;
@@ -101,10 +98,7 @@ function describePlayer(player) {
   return player === "black" ? "黒" : "白";
 }
 
-function addLog(message) {
-  state.log.unshift(message);
-  state.log = state.log.slice(0, 6);
-}
+function addLog() {}
 
 function canInteractWithBoard() {
   return !(state.gameOver || state.awaitingDecision || state.viewingObservation);
@@ -455,7 +449,6 @@ function initializeBoardCanvas() {
 function render() {
   renderBoard();
   renderStatus();
-  renderLog();
 }
 
 function renderBoard() {
@@ -513,15 +506,6 @@ function renderStatus() {
   toggleButtons(elements.observeButtons, observationDisabled);
   toggleButtons(elements.skipButtons, observationDisabled);
   toggleButtons(elements.backButtons, !(state.viewingObservation && !state.gameOver));
-}
-
-function renderLog() {
-  elements.log.innerHTML = "";
-  state.log.forEach((entry) => {
-    const li = document.createElement("li");
-    li.textContent = entry;
-    elements.log.appendChild(li);
-  });
 }
 
 elements.boardCanvas.addEventListener("click", handleBoardClick);
