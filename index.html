@@ -7,69 +7,22 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="page">
+    <main class="page intro-page">
       <section class="hero">
         <h1>量子五目ならべ</h1>
         <p>
           90% / 70% / 30% / 10% の確率で黒になる量子石を使った新感覚の五目ならべです。<br />
           交互に石を置き、手番の終わりに「観測」して勝利を狙いましょう。
         </p>
-      </section>
-
-      <section class="game-layout" aria-label="盤面と操作エリア">
-        <section class="player-panel opponent-panel" aria-label="相手プレイヤーの操作UI">
-          <div class="player-label">
-            <p class="player-role">相手プレイヤー</p>
-            <p class="player-note">遠隔側の操作</p>
-          </div>
-          <div class="status-block">
-            <p class="status" data-status></p>
-            <p class="stone-info" data-stone-info></p>
-            <p class="decision-info" data-decision-info></p>
-          </div>
-          <div class="controls" data-player-controls>
-            <button class="button" data-action="observe">観測する</button>
-            <button class="button subtle" data-action="skip">観測しない</button>
-            <button class="button ghost" data-action="reset">リセット</button>
-          </div>
-        </section>
-
-        <div class="board-wrapper" aria-label="碁盤">
-          <div
-            id="board"
-            class="board"
-            aria-label="量子五目ならべの盤面"
-            role="application"
-            aria-describedby="board-instructions"
-          >
-            <canvas id="board-canvas" class="board-canvas" aria-hidden="true"></canvas>
-            <p id="board-instructions" class="sr-only">
-              盤面をクリックまたはタップして石を置き、観測ボタンで確定させます。
-            </p>
-          </div>
+        <div class="hero-actions">
+          <a class="button" href="game.html">ゲームをはじめる</a>
+          <a class="button ghost" href="#rules">ルールを見る</a>
         </div>
-
-        <section class="player-panel self-panel" aria-label="自分プレイヤーの操作UI">
-          <div class="player-label">
-            <p class="player-role">自分プレイヤー</p>
-            <p class="player-note">手元側の操作</p>
-          </div>
-          <div class="status-block">
-            <p class="status" data-status></p>
-            <p class="stone-info" data-stone-info></p>
-            <p class="decision-info" data-decision-info></p>
-          </div>
-          <div class="controls" data-player-controls>
-            <button class="button" data-action="observe">観測する</button>
-            <button class="button subtle" data-action="skip">観測しない</button>
-            <button class="button ghost" data-action="reset">リセット</button>
-          </div>
-        </section>
       </section>
 
-      <section class="instructions">
-        <details class="rules" aria-label="ルールの説明">
-          <summary>ルールを表示</summary>
+      <section class="instructions" id="rules">
+        <details class="rules" aria-label="ルールの説明" open>
+          <summary>ルール</summary>
           <ul>
             <li>黒は 90% → 70%、白は 10% → 30% の石を交互に使用します。</li>
             <li>石を置いた直後、観測するかどうかを選べます。</li>
@@ -81,7 +34,5 @@
         </details>
       </section>
     </main>
-
-    <script src="game.js" type="module"></script>
   </body>
 </html>

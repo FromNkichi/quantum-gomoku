@@ -12,6 +12,7 @@ const STONE_CYCLES = {
 };
 const BOARD_PADDING_RATIO = 0.085;
 const MOBILE_BREAKPOINT = 640;
+const MOBILE_BROWSER_UI_OFFSET = 120;
 
 const elements = {
   board: document.getElementById("board"),
@@ -105,6 +106,13 @@ function describePlayer(player) {
 
 function addLog() {}
 
+function getViewportHeight() {
+  if (window.visualViewport && typeof window.visualViewport.height === "number") {
+    return window.visualViewport.height;
+  }
+  return window.innerHeight;
+}
+
 function updateMobileLayout() {
   const root = document.documentElement;
   if (!root) return;
@@ -113,11 +121,15 @@ function updateMobileLayout() {
     root.style.removeProperty("--mobile-panel-height");
     return;
   }
-  const viewportWidth = Math.min(window.innerWidth, document.documentElement.clientWidth);
-  const boardSize = viewportWidth;
-  const viewportHeight = window.innerHeight;
-  const remainingHeight = Math.max(viewportHeight - boardSize, 0);
-  const panelHeight = remainingHeight / 2;
+  const viewportWidth = Math.min(
+    window.innerWidth,
+    document.documentElement.clientWidth || window.innerWidth,
+  );
+  const viewportHeight = getViewportHeight();
+  const usableHeight = Math.max(viewportHeight - MOBILE_BROWSER_UI_OFFSET, 320);
+  const boardSize = Math.min(viewportWidth, usableHeight);
+  const remainingHeight = Math.max(usableHeight - boardSize, 0);
+  const panelHeight = remainingHeight > 0 ? remainingHeight / 2 : Math.min(boardSize * 0.45, 220);
   root.style.setProperty("--mobile-board-size", `${boardSize}px`);
   root.style.setProperty("--mobile-panel-height", `${panelHeight}px`);
 }
