@@ -9,7 +9,11 @@
   <body>
     <main class="page game-page">
       <section class="game-layout" aria-label="盤面と操作エリア">
-        <section class="player-panel opponent-panel" aria-label="白プレイヤーの操作UI">
+        <section
+          class="player-panel opponent-panel"
+          aria-label="白プレイヤーの操作UI"
+          data-player-panel="white"
+        >
           <p class="player-summary" data-player-color="white">白プレイヤー: 次10%</p>
           <div class="controls" data-player-controls>
             <button class="button" data-action="observe">観測する</button>
@@ -33,7 +37,11 @@
           </div>
         </div>
 
-        <section class="player-panel self-panel" aria-label="黒プレイヤーの操作UI">
+        <section
+          class="player-panel self-panel"
+          aria-label="黒プレイヤーの操作UI"
+          data-player-panel="black"
+        >
           <p class="player-summary" data-player-color="black">黒プレイヤー: 次70%</p>
           <div class="controls" data-player-controls>
             <button class="button" data-action="observe">観測する</button>

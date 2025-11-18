@@ -13,11 +13,13 @@ const STONE_CYCLES = {
 const BOARD_PADDING_RATIO = 0.085;
 const MOBILE_BREAKPOINT = 640;
 const MOBILE_BROWSER_UI_OFFSET = 120;
+const MAX_OBSERVATIONS = 5;
 
 const elements = {
   board: document.getElementById("board"),
   boardCanvas: document.getElementById("board-canvas"),
   boardWrapper: document.querySelector(".board-wrapper"),
+  playerPanels: document.querySelectorAll("[data-player-panel]"),
   playerSummaries: document.querySelectorAll("[data-player-color]"),
   observeButtons: document.querySelectorAll('[data-action="observe"]'),
   skipButtons: document.querySelectorAll('[data-action="skip"]'),
@@ -37,6 +39,15 @@ const canvasState = {
 };
 let hoverCellIndex = null;
 
+function getPlayerFromElement(element) {
+  if (!element) return null;
+  return element.closest("[data-player-panel]")?.dataset.playerPanel || null;
+}
+
+function hasObservationChance(player) {
+  return state.observationsRemaining[player] > 0;
+}
+
 const state = {
   board: createEmptyBoard(BOARD_SIZE),
   currentPlayer: "black",
@@ -48,6 +59,10 @@ const state = {
   previousQuantumBoard: null,
   viewingObservation: false,
   pendingTurnSwitch: false,
+  observationsRemaining: {
+    black: MAX_OBSERVATIONS,
+    white: MAX_OBSERVATIONS,
+  },
 };
 
 function defaultState() {
@@ -62,6 +77,8 @@ function defaultState() {
   state.previousQuantumBoard = null;
   state.viewingObservation = false;
   state.pendingTurnSwitch = false;
+  state.observationsRemaining.black = MAX_OBSERVATIONS;
+  state.observationsRemaining.white = MAX_OBSERVATIONS;
   render();
 }
 
@@ -224,6 +241,14 @@ function observeBoard() {
   if (!state.awaitingDecision || state.gameOver || state.viewingObservation) return;
   state.previousQuantumBoard = cloneBoard(state.board);
   const observer = state.currentPlayer;
+  if (!hasObservationChance(observer)) {
+    render();
+    return;
+  }
+  state.observationsRemaining[observer] = Math.max(
+    0,
+    state.observationsRemaining[observer] - 1,
+  );
   const { collapsed, winner } = collapseBoard(state.board, BOARD_SIZE);
   state.board = collapsed;
   state.awaitingDecision = false;
@@ -502,19 +527,31 @@ function renderBoard() {
   drawBoardCanvas();
 }
 
-function toggleButtons(buttons, disabled) {
-  buttons.forEach((button) => {
-    button.disabled = disabled;
-  });
-}
-
-function updateObserveButtons() {
-  const canReturnToQuantumBoard = state.viewingObservation && !state.gameOver;
-  const canObserve = state.awaitingDecision && !state.gameOver && !state.viewingObservation;
-  const shouldDisable = !(canReturnToQuantumBoard || canObserve);
-  toggleButtons(elements.observeButtons, shouldDisable);
-  elements.observeButtons.forEach((button) => {
-    button.textContent = canReturnToQuantumBoard ? RETURN_LABEL : OBSERVE_LABEL;
+function updatePlayerPanels() {
+  elements.playerPanels.forEach((panel) => {
+    const player = panel.dataset.playerPanel;
+    if (!player) return;
+    const isCurrentPlayer = !state.gameOver && state.currentPlayer === player;
+    panel.classList.toggle("is-active", isCurrentPlayer);
+    panel.classList.toggle("is-inactive", !isCurrentPlayer);
+    const observeButton = panel.querySelector('[data-action="observe"]');
+    if (observeButton) {
+      const canReturn = state.viewingObservation && isCurrentPlayer && !state.gameOver;
+      const canObserve =
+        state.awaitingDecision &&
+        !state.gameOver &&
+        !state.viewingObservation &&
+        isCurrentPlayer &&
+        hasObservationChance(player);
+      observeButton.disabled = !(canReturn || canObserve);
+      observeButton.textContent = canReturn ? RETURN_LABEL : OBSERVE_LABEL;
+    }
+    const skipButton = panel.querySelector('[data-action="skip"]');
+    if (skipButton) {
+      const skipDisabled =
+        !state.awaitingDecision || state.gameOver || state.viewingObservation || !isCurrentPlayer;
+      skipButton.disabled = skipDisabled;
+    }
   });
 }
 
@@ -532,14 +569,15 @@ function renderStatus() {
       const nextProbability = Math.round(getNextProbability(color) * 100);
       detail = `次${nextProbability}%`;
     }
-    summary.textContent = `${label}: ${detail}`;
+    const remaining = state.observationsRemaining[color];
+    summary.textContent = `${label}: ${detail}（観測残り${remaining}回）`;
   });
-  updateObserveButtons();
-  const skipDisabled = !state.awaitingDecision || state.gameOver || state.viewingObservation;
-  toggleButtons(elements.skipButtons, skipDisabled);
+  updatePlayerPanels();
 }
 
-function handlePrimaryAction() {
+function handlePrimaryAction(event) {
+  const player = getPlayerFromElement(event.currentTarget);
+  if (!player || player !== state.currentPlayer) return;
   if (state.viewingObservation && !state.gameOver) {
     revertBoard();
     return;
@@ -547,11 +585,19 @@ function handlePrimaryAction() {
   observeBoard();
 }
 
+function handleSkipAction(event) {
+  const player = getPlayerFromElement(event.currentTarget);
+  if (!player || player !== state.currentPlayer) return;
+  skipObservation();
+}
+
 elements.boardCanvas.addEventListener("click", handleBoardClick);
 elements.boardCanvas.addEventListener("pointermove", handleBoardPointerMove);
 elements.boardCanvas.addEventListener("pointerleave", handleBoardPointerLeave);
-elements.observeButtons.forEach((button) => button.addEventListener("click", handlePrimaryAction));
-elements.skipButtons.forEach((button) => button.addEventListener("click", skipObservation));
+elements.observeButtons.forEach((button) =>
+  button.addEventListener("click", handlePrimaryAction),
+);
+elements.skipButtons.forEach((button) => button.addEventListener("click", handleSkipAction));
 elements.resetButtons.forEach((button) => button.addEventListener("click", resetGame));
 
 initializeResponsiveLayout();
