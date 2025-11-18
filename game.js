@@ -30,6 +30,7 @@ const state = {
   awaitingDecision: false,
   gameOver: false,
   winner: null,
+  observerWin: false,
   log: [],
   previousQuantumBoard: null,
   viewingObservation: false,
@@ -49,6 +50,7 @@ function defaultState() {
   state.awaitingDecision = false;
   state.gameOver = false;
   state.winner = null;
+  state.observerWin = false;
   state.log = [];
   state.previousQuantumBoard = null;
   state.viewingObservation = false;
@@ -120,19 +122,29 @@ function switchTurn() {
 function observeBoard() {
   if (!state.awaitingDecision || state.gameOver || state.viewingObservation) return;
   state.previousQuantumBoard = cloneBoard(state.board);
+  const observer = state.currentPlayer;
   const { collapsed, winner } = collapseBoard(state.board, BOARD_SIZE);
   state.board = collapsed;
   state.awaitingDecision = false;
-  state.viewingObservation = !winner;
-  state.pendingTurnSwitch = !winner;
-  if (winner) {
+  let resolvedWinner = winner;
+  state.observerWin = winner === "both";
+  if (state.observerWin) {
+    resolvedWinner = observer;
+  }
+  state.viewingObservation = !resolvedWinner;
+  state.pendingTurnSwitch = !resolvedWinner;
+  if (resolvedWinner) {
     state.previousQuantumBoard = null;
     state.gameOver = true;
-    state.winner = winner;
-    if (winner === "both") {
-      addLog("観測の結果、両者同時に五目が揃った！引き分けです。");
+    state.winner = resolvedWinner;
+    if (state.observerWin) {
+      addLog(
+        `観測の結果、黒と白が同時に五目が揃った！観測していた${describePlayer(
+          observer
+        )}の勝利！`
+      );
     } else {
-      addLog(`観測の結果、${describePlayer(winner)}の勝利！`);
+      addLog(`観測の結果、${describePlayer(resolvedWinner)}の勝利！`);
     }
   } else {
     addLog("観測結果を盤面に描画しました。" + " 五目はまだ現れていません。もどるで続行してください。");
@@ -219,8 +231,8 @@ function renderBoard() {
 
 function renderStatus() {
   if (state.gameOver) {
-    if (state.winner === "both") {
-      elements.status.textContent = "両者の石が同時に五目を達成しました。引き分けです。";
+    if (state.observerWin) {
+      elements.status.textContent = `${describePlayer(state.winner)}が観測者として勝利しました。黒と白が同時に五目を達成しました。`;
     } else {
       elements.status.textContent = `${describePlayer(state.winner)}の勝利！もう一度遊ぶにはリセットしてください。`;
     }
