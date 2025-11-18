@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>量子五目ならべ - プレイ画面</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page game-page">
+      <section class="game-layout" aria-label="盤面と操作エリア">
+        <section class="player-panel opponent-panel" aria-label="相手プレイヤーの操作UI">
+          <div class="player-label">
+            <p class="player-role">相手プレイヤー</p>
+            <p class="player-note">遠隔側の操作</p>
+          </div>
+          <div class="status-block">
+            <p class="status" data-status></p>
+            <p class="stone-info" data-stone-info></p>
+            <p class="decision-info" data-decision-info></p>
+          </div>
+          <div class="controls" data-player-controls>
+            <button class="button" data-action="observe">観測する</button>
+            <button class="button subtle" data-action="skip">観測しない</button>
+            <button class="button ghost" data-action="reset">リセット</button>
+          </div>
+        </section>
+
+        <div class="board-wrapper" aria-label="碁盤">
+          <div
+            id="board"
+            class="board"
+            aria-label="量子五目ならべの盤面"
+            role="application"
+            aria-describedby="board-instructions"
+          >
+            <canvas id="board-canvas" class="board-canvas" aria-hidden="true"></canvas>
+            <p id="board-instructions" class="sr-only">
+              盤面をクリックまたはタップして石を置き、観測ボタンで確定させます。
+            </p>
+          </div>
+        </div>
+
+        <section class="player-panel self-panel" aria-label="自分プレイヤーの操作UI">
+          <div class="player-label">
+            <p class="player-role">自分プレイヤー</p>
+            <p class="player-note">手元側の操作</p>
+          </div>
+          <div class="status-block">
+            <p class="status" data-status></p>
+            <p class="stone-info" data-stone-info></p>
+            <p class="decision-info" data-decision-info></p>
+          </div>
+          <div class="controls" data-player-controls>
+            <button class="button" data-action="observe">観測する</button>
+            <button class="button subtle" data-action="skip">観測しない</button>
+            <button class="button ghost" data-action="reset">リセット</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="game.js" type="module"></script>
+  </body>
+</html>
