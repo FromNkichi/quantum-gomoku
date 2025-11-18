@@ -37,10 +37,6 @@ const state = {
   pendingTurnSwitch: false,
 };
 
-elements.board.style.setProperty(
-  "grid-template-columns",
-  `repeat(${BOARD_SIZE}, 1fr)`
-);
 elements.board.style.setProperty("--board-size", BOARD_SIZE);
 
 function defaultState() {
@@ -195,6 +191,8 @@ function renderBoard() {
     button.dataset.index = index;
     const x = index % BOARD_SIZE;
     const y = Math.floor(index / BOARD_SIZE);
+    button.style.setProperty("--cell-x", x);
+    button.style.setProperty("--cell-y", y);
     if (y === 0) button.classList.add("cell-top-edge");
     if (y === BOARD_SIZE - 1) button.classList.add("cell-bottom-edge");
     if (x === 0) button.classList.add("cell-left-edge");
