@@ -41,6 +41,7 @@ elements.board.style.setProperty(
   "grid-template-columns",
   `repeat(${BOARD_SIZE}, 1fr)`
 );
+elements.board.style.setProperty("--board-size", BOARD_SIZE);
 
 function defaultState() {
   state.board = createEmptyBoard(BOARD_SIZE);
@@ -222,6 +223,7 @@ function renderBoard() {
       );
       button.appendChild(stone);
     }
+    button.classList.toggle("cell-has-stone", Boolean(cell));
     if (state.gameOver || state.awaitingDecision || state.viewingObservation) {
       button.disabled = true;
     }

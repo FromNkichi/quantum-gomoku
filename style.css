@@ -43,25 +43,51 @@ main.page {
   width: 100%;
   display: flex;
   justify-content: center;
-  background: linear-gradient(145deg, #f3d7a6, #cfab6c);
+  background: radial-gradient(circle at 20% 20%, #f8dca5, #e0b96d 65%, #c79548);
   padding: clamp(0.5rem, 2vw, 1.25rem);
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   border: 1px solid rgba(113, 78, 22, 0.35);
   position: relative;
   box-shadow: inset 0 6px 20px rgba(51, 35, 15, 0.25);
 }
 
 .board {
+  --board-padding: clamp(0.65rem, 2vw, 1.1rem);
+  --grid-line-color: rgba(71, 45, 16, 0.8);
+  --board-size: 11;
+  --grid-step: calc((100% - (var(--board-padding) * 2)) / (var(--board-size) - 1));
   display: grid;
   width: min(640px, 100%);
   gap: 0;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 60%),
-    rgba(0, 0, 0, 0.04);
+  background: linear-gradient(135deg, #f4d9a5, #d9b172);
   border: 2px solid rgba(77, 50, 13, 0.8);
   border-radius: 0.75rem;
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.15), 0 18px 30px rgba(57, 40, 18, 0.45);
   position: relative;
-  padding: clamp(0.65rem, 2vw, 1.1rem);
+  padding: var(--board-padding);
+  overflow: hidden;
+}
+
+.board::before {
+  content: "";
+  position: absolute;
+  top: var(--board-padding);
+  bottom: var(--board-padding);
+  left: var(--board-padding);
+  right: var(--board-padding);
+  background-image: repeating-linear-gradient(
+      to right,
+      transparent 0 calc(var(--grid-step) - 1.5px),
+      var(--grid-line-color) calc(var(--grid-step) - 1.5px) calc(var(--grid-step) + 1.5px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--grid-step) - 1.5px),
+      var(--grid-line-color) calc(var(--grid-step) - 1.5px) calc(var(--grid-step) + 1.5px)
+    );
+  pointer-events: none;
+  opacity: 0.95;
+  z-index: 0;
 }
 
 .board.observation-view::after {
@@ -89,46 +115,30 @@ main.page {
   justify-content: center;
   position: relative;
   padding: 0;
+  z-index: 1;
 }
 
-.cell::before,
 .cell::after {
   content: "";
   position: absolute;
-  background: rgba(64, 42, 10, 0.8);
-  pointer-events: none;
-}
-
-.cell::before {
-  width: 2px;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.cell::after {
-  height: 2px;
-  left: 0;
-  right: 0;
   top: 50%;
-  transform: translateY(-50%);
-}
-
-.cell-top-edge::before {
-  top: 50%;
-}
-
-.cell-bottom-edge::before {
-  bottom: 50%;
-}
-
-.cell-left-edge::after {
   left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(66, 41, 13, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: transform 150ms ease, opacity 150ms ease;
 }
 
-.cell-right-edge::after {
-  right: 50%;
+.cell:not(:disabled):hover::after {
+  transform: translate(-50%, -50%) scale(1.2);
+  background: rgba(66, 41, 13, 0.6);
+}
+
+.cell.cell-has-stone::after {
+  opacity: 0;
 }
 
 .cell:focus-visible {
@@ -146,16 +156,17 @@ main.page {
 }
 
 .stone {
-  width: 80%;
-  height: 80%;
+  width: 68%;
+  height: 68%;
   border-radius: 50%;
-  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.5), inset 0 -5px 12px rgba(0, 0, 0, 0.35),
-    0 8px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(24, 17, 8, 0.35);
+  box-shadow: inset 0 4px 10px rgba(255, 255, 255, 0.35), inset 0 -8px 12px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: clamp(0.65rem, 1.8vw, 0.95rem);
+  font-size: clamp(0.7rem, 1.8vw, 1rem);
   letter-spacing: 0.03em;
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
@@ -163,11 +174,11 @@ main.page {
 .stone.probability-stone {
   background: var(--stone-fill, #cfc1a5);
   color: var(--stone-text-color, #1a1209);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .stone.resolved.black {
-  background: radial-gradient(circle at 30% 30%, #4c4c4c, #0f0f0f);
+  background: radial-gradient(circle at 30% 30%, #4b4b4b, #050505);
   color: transparent;
 }
 
