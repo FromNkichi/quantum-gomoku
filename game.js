@@ -461,9 +461,9 @@ function drawProbabilityStone(ctx, center, radius, cell) {
   const tone = blendStoneColor(probability);
   drawCircle(ctx, center.x, center.y, radius, tone.fill, "rgba(24, 17, 8, 0.35)");
   const facing = getStoneTextOrientation(cell);
-  const displayedProbability = Math.round(
-    (facing === "white" ? 1 - probability : probability) * 100,
-  );
+  // 石の確率表示は常に「黒になる確率」を指し示す。
+  // 白番のときは数字だけを回転させ、値そのものは反転しない。
+  const displayedProbability = Math.round(probability * 100);
   drawProbabilityValue(ctx, center, radius, tone.text, displayedProbability, facing);
 }
 
