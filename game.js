@@ -14,6 +14,7 @@ const BOARD_PADDING_RATIO = 0.085;
 const MOBILE_BREAKPOINT = 640;
 const MOBILE_BROWSER_UI_OFFSET = 120;
 const MAX_OBSERVATIONS = 5;
+const OBSERVATION_SIMULATION_COUNT = 400;
 
 const elements = {
   board: document.getElementById("board"),
@@ -21,9 +22,9 @@ const elements = {
   boardWrapper: document.querySelector(".board-wrapper"),
   playerPanels: document.querySelectorAll("[data-player-panel]"),
   playerSummaries: document.querySelectorAll("[data-player-color]"),
+  playerOdds: document.querySelectorAll("[data-player-odds]"),
   observeButtons: document.querySelectorAll('[data-action="observe"]'),
   skipButtons: document.querySelectorAll('[data-action="skip"]'),
-  resetButtons: document.querySelectorAll('[data-action="reset"]'),
 };
 
 const OBSERVE_LABEL = "観測する";
@@ -283,10 +284,6 @@ function skipObservation() {
   addLog("観測せずに次のプレイヤーへターンを渡す。");
   switchTurn();
   render();
-}
-
-function resetGame() {
-  defaultState();
 }
 
 function revertBoard() {
@@ -556,6 +553,10 @@ function updatePlayerPanels() {
 }
 
 function renderStatus() {
+  const estimationBoard = getEstimationBoard();
+  const odds = estimationBoard
+    ? estimateObservationOdds(estimationBoard, BOARD_SIZE)
+    : null;
   elements.playerSummaries.forEach((summary) => {
     const color = summary.dataset.playerColor;
     if (!color) return;
@@ -572,7 +573,55 @@ function renderStatus() {
     const remaining = state.observationsRemaining[color];
     summary.textContent = `${label}: ${detail}（観測残り${remaining}回）`;
   });
+  updatePlayerOdds(odds);
   updatePlayerPanels();
+}
+
+function getEstimationBoard() {
+  if (state.gameOver) return null;
+  if (state.viewingObservation) {
+    return state.previousQuantumBoard && hasQuantumCells(state.previousQuantumBoard)
+      ? state.previousQuantumBoard
+      : null;
+  }
+  return hasQuantumCells(state.board) ? state.board : null;
+}
+
+function hasQuantumCells(board) {
+  return board.some((cell) => cell && typeof cell !== "string");
+}
+
+function estimateObservationOdds(board, size, samples = OBSERVATION_SIMULATION_COUNT) {
+  if (!board || !samples) return null;
+  const wins = { black: 0, white: 0 };
+  for (let i = 0; i < samples; i += 1) {
+    const { winner } = collapseBoard(board, size);
+    if (winner === "black") {
+      wins.black += 1;
+    } else if (winner === "white") {
+      wins.white += 1;
+    } else if (winner === "both") {
+      wins.black += 1;
+      wins.white += 1;
+    }
+  }
+  return {
+    black: wins.black / samples,
+    white: wins.white / samples,
+  };
+}
+
+function updatePlayerOdds(odds) {
+  const baseLabel = "今観測した場合の五目率";
+  elements.playerOdds.forEach((element) => {
+    const color = element.dataset.playerOdds;
+    if (!color) return;
+    if (odds && typeof odds[color] === "number") {
+      element.textContent = `${baseLabel}: ${Math.round(odds[color] * 100)}%`;
+    } else {
+      element.textContent = `${baseLabel}: --%`;
+    }
+  });
 }
 
 function handlePrimaryAction(event) {
@@ -598,7 +647,6 @@ elements.observeButtons.forEach((button) =>
   button.addEventListener("click", handlePrimaryAction),
 );
 elements.skipButtons.forEach((button) => button.addEventListener("click", handleSkipAction));
-elements.resetButtons.forEach((button) => button.addEventListener("click", resetGame));
 
 initializeResponsiveLayout();
 initializeBoardCanvas();
