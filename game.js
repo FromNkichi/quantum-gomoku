@@ -446,13 +446,23 @@ function drawStones(ctx) {
   });
 }
 
+function getStoneTextOrientation(cell) {
+  if (state.currentPlayer === "white") {
+    return "white";
+  }
+  if (state.currentPlayer === "black") {
+    return "black";
+  }
+  return cell.orientation === "white" ? "white" : "black";
+}
+
 function drawProbabilityStone(ctx, center, radius, cell) {
   const probability = clampProbability(cell.probability);
   const tone = blendStoneColor(probability);
   drawCircle(ctx, center.x, center.y, radius, tone.fill, "rgba(24, 17, 8, 0.35)");
   const whiteProbability = Math.round((1 - probability) * 100);
   const blackProbability = Math.round(probability * 100);
-  const facing = cell.orientation === "white" ? "white" : "black";
+  const facing = getStoneTextOrientation(cell);
   const topText =
     facing === "white"
       ? { label: "白", value: whiteProbability }
@@ -478,7 +488,7 @@ function drawProbabilityText(ctx, center, radius, color, textInfo, direction) {
   ctx.font = `600 ${labelFontSize}px "Noto Sans JP", sans-serif`;
   ctx.fillText(textInfo.label, center.x, center.y + labelOffset);
   ctx.font = `700 ${valueFontSize}px "Noto Sans JP", sans-serif`;
-  ctx.fillText(`${textInfo.value}%`, center.x, center.y + valueOffset);
+  ctx.fillText(`${textInfo.value}`, center.x, center.y + valueOffset);
   ctx.restore();
 }
 
